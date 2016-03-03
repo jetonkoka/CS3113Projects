@@ -120,12 +120,15 @@ int inMenu = 0;
 Matrix projectionMatrix;
 Matrix projectionMatrixForShip;
 Matrix projectionMatrixForBullet;
+Matrix projectionMatrixForText;
 Matrix modelMatrix;
 Matrix modelMatrixForShip;
 Matrix modelMatrixForBullet;
+Matrix modelMatrixForText;
 Matrix viewMatrix;
 Matrix viewMatrixForShip;
 Matrix viewMatrixForBullet;
+Matrix viewMatrixForText;
 ShaderProgram *program;
 std::vector<Bullet> bullets;
 
@@ -246,6 +249,9 @@ void SheetSprite::Draw(ShaderProgram* program) {
 
 
 void DrawText(ShaderProgram *program, int fontTexture, std::string text, float size, float spacing, float xPosStart, float yPosStart) {
+	program->setModelMatrix(modelMatrixForText);
+	program->setProjectionMatrix(projectionMatrixForText);
+	program->setViewMatrix(viewMatrixForText);
 	float texture_size = 1.0 / 16.0f;
 	std::vector<float> vertexData;
 	std::vector<float> texCoordData;
@@ -305,13 +311,9 @@ void update(std::vector<Entity>& theEnemies, float speed, SheetSprite& enemy)
 			}
 			else 
 			{
-				//theEnemies[i].moveEntity(0, -30*speed);
 				theEnemies[i].direction_x *= -1;
 				theEnemies[i].y = theEnemies[i].y - theEnemies[i].height;
 				modelMatrix.Translate(0, theEnemies[i].y, 0);
-
-				//modelMatrix.setPosition(theEnemies[i].x, theEnemies[i].y, 0);
-
 			}
 		}
 		else if (theEnemies[i].direction_x < 0)
@@ -324,13 +326,8 @@ void update(std::vector<Entity>& theEnemies, float speed, SheetSprite& enemy)
 			}
 			else
 			{
-				//theEnemies[i].moveEntity(0, -30*speed);
 				theEnemies[i].direction_x *= -1;
 				theEnemies[i].y = theEnemies[i].y - theEnemies[i].height;
-				///modelMatrix.Translate(0, theEnemies[i].y, 0);
-
-				//modelMatrix.setPosition(theEnemies[i].x, theEnemies[i].y, 0);
-
 				
 			}
 		}
@@ -477,8 +474,8 @@ int main(int argc, char *argv[])
 
 		if (inMenu == 0)
 		{
-			DrawText(program, textureForText, startingText, .3f, .02f, -2.2f, 0);
-			DrawText(program, textureForText, pressSpace, .3f, .02f, -2.99f, -1.0f);
+			DrawText(program, textureForText, startingText, .07f, .002f, -.50f, .30f);
+			DrawText(program, textureForText, pressSpace, .07f, .0002f, -.7f, -.75f);
 
 		}
 		if (keys[SDL_SCANCODE_RETURN])
@@ -567,7 +564,6 @@ int main(int argc, char *argv[])
 				else
 				{
 					  
-					//std::cout << theBulletStorage[0]->timeAlive << std::endl;
 					program->setModelMatrix(modelMatrixForBullet);
 					program->setProjectionMatrix(projectionMatrixForBullet);
 					program->setViewMatrix(viewMatrixForBullet);
@@ -580,7 +576,6 @@ int main(int argc, char *argv[])
 						vecOfEnemy.erase(vecOfEnemy.begin() + index);
 						delete theBulletStorage[0];
 						theBulletStorage.clear();
-						//std::cout << vecOfEnemy.size() << std::endl;
 					}
 					if (theBulletStorage.size() != 0)
 					{
@@ -590,22 +585,22 @@ int main(int argc, char *argv[])
 							vecOfEnemy2.erase(vecOfEnemy2.begin() + index);
 							delete theBulletStorage[0];
 							theBulletStorage.clear();
-							//std::cout << vecOfEnemy2.size() << std::endl;
 						}
 					}
 					
 				}
 			}
-
-			//std::cout << elapsed << std::endl;
 		
 
 			
 			 
 		}
-		
-		score = "Score: "+ std::to_string((-1 * vecOfEnemy.size() + 10));
-		DrawText(program, textureForText, score, .3f, .02f, -2.99f, .75f);
+		if (inMenu != 0)
+		{
+			score = "Score: " + std::to_string((-1 * vecOfEnemy.size()-vecOfEnemy2.size() + 10));
+			DrawText(program, textureForText, score, .05f, .000002f, -.97f, .68f);
+		}
+	
 
 
 		SDL_GL_SwapWindow(displayWindow);
