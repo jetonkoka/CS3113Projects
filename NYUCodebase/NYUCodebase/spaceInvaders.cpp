@@ -185,7 +185,7 @@ int Bullet::collide(std::vector<Entity>& theEnemies)
 	{
 		
 
-		if (x + width< (theEnemies[i].x + (theEnemies[i].width/2) && x-width>(theEnemies[i].x - (theEnemies[i].width/2))))
+		if (x > (theEnemies[i].x + (theEnemies[i].width/2) && x <(theEnemies[i].x - (theEnemies[i].width/2))))
 		{
 			if (y < theEnemies[i].y + (theEnemies[i].height/2) && y > theEnemies[i].y - (theEnemies[i].height/2 ))
 			{
@@ -294,7 +294,7 @@ void DrawText(ShaderProgram *program, int fontTexture, std::string text, float s
 
 
 
-void update(std::vector<Entity>& theEnemies, float speed, SheetSprite& enemy)
+void update(std::vector<Entity>& theEnemies, float speed, SheetSprite& enemy, std::vector<Bullet*>* theBulletStorage, SheetSprite& bullet, float elapsed)
 {
 	for (int i = 0; i < theEnemies.size(); i++)
 	{
@@ -336,17 +336,51 @@ void update(std::vector<Entity>& theEnemies, float speed, SheetSprite& enemy)
 		}
 		program->setModelMatrix(modelMatrix);
 		enemy.Draw(program);
+		if (theBulletStorage->size() != 0)
+		{
+
+			if ((*theBulletStorage)[0]->shouldRemoveBullet())
+			{
+				delete (*theBulletStorage)[0];
+				(*theBulletStorage).clear();
+
+			}
+			else
+			{
+
+				program->setModelMatrix(modelMatrixForBullet);
+				program->setProjectionMatrix(projectionMatrixForBullet);
+				program->setViewMatrix(viewMatrixForBullet);
+				(*theBulletStorage)[0]->update(elapsed);
+				modelMatrixForBullet.setPosition((*theBulletStorage)[0]->x, (*theBulletStorage)[0]->y, 0);
+				bullet.Draw(program);
+				int index = (*theBulletStorage)[0]->collide(theEnemies);
+				if (index != 1000)
+				{
+					theEnemies.erase(theEnemies.begin() + index);
+					delete (*theBulletStorage)[0];
+					(*theBulletStorage).clear();
+				}
+				
+
+			}
+		}
+
+
+
+
+
 	}
 }
 
 
 template<class obj>
-void clearTheHeap(std::vector<obj*>& vec)
+void clearTheHeap(std::vector<obj*>* vec)
 {
-	for (int i = 0; i < vec.size(); i++)
+	for (int i = 0; i < vec->size(); i++)
 	{
-		delete vec[i];
-		vec[i] = nullptr;
+		delete (*vec)[i];
+		(*vec)[i] = nullptr;
 	}
 }
 
@@ -444,7 +478,7 @@ int main(int argc, char *argv[])
 	vecOfEnemy.push_back(enemy);
 	//======================================================================================================================================================
 
-	std::vector<Bullet*> theBulletStorage;
+	std::vector<Bullet*> *theBulletStorage = new std::vector<Bullet*>;
 
 
 
@@ -510,8 +544,8 @@ int main(int argc, char *argv[])
 		if (inMenu != 0)
 		{
 			playerShip.Draw(program);
-			update(vecOfEnemy, velocityForEnemies, enemyBlack);
-			update(vecOfEnemy2, velocityForEnemies, enemyBlack);
+			update(vecOfEnemy, velocityForEnemies, enemyBlack, theBulletStorage, bullet, elapsed);
+			update(vecOfEnemy2, velocityForEnemies, enemyBlack, theBulletStorage, bullet, elapsed);
 			
 			if (keys[SDL_SCANCODE_RIGHT])
 			{
@@ -551,53 +585,15 @@ int main(int argc, char *argv[])
 
 			if (keys[SDL_SCANCODE_SPACE])
 			{
-				if (theBulletStorage.size() == 0)
+				if (theBulletStorage->size() == 0)
 				{
 					Bullet* currBullet = new Bullet(player.x, player.y + 0.1f, bullet.width);
-					theBulletStorage.push_back(currBullet);
+					theBulletStorage->push_back(currBullet);
 				
 				}
 			
 			}
-			if (theBulletStorage.size() != 0)
-			{
-				
-				if (theBulletStorage[0]->shouldRemoveBullet())
-				{
-					delete theBulletStorage[0];
-					theBulletStorage.clear();
-
-				}
-				else
-				{
-					  
-					program->setModelMatrix(modelMatrixForBullet);
-					program->setProjectionMatrix(projectionMatrixForBullet);
-					program->setViewMatrix(viewMatrixForBullet);
-					theBulletStorage[0]->update(elapsed);
-					modelMatrixForBullet.setPosition(theBulletStorage[0]->x, theBulletStorage[0]->y, 0);
-					bullet.Draw(program);
-					int index = theBulletStorage[0]->collide(vecOfEnemy);
-					if (index != 1000)
-					{
-						vecOfEnemy.erase(vecOfEnemy.begin() + index);
-						delete theBulletStorage[0];
-						theBulletStorage.clear();
-					}
-					if (theBulletStorage.size() != 0)
-					{
-						index = theBulletStorage[0]->collide(vecOfEnemy2);
-						if (index != 1000)
-						{
-							vecOfEnemy2.erase(vecOfEnemy2.begin() + index);
-							delete theBulletStorage[0];
-							theBulletStorage.clear();
-						}
-					}
-					
-				}
-			}
-		
+			
 
 			
 			 
@@ -605,7 +601,7 @@ int main(int argc, char *argv[])
 		if (inMenu != 0)
 		{
 			score = "Score: " + std::to_string((-1 * vecOfEnemy.size()-vecOfEnemy2.size() + 10));
-			DrawText(program, textureForText, score, .3f, .000002f, -.97f, .68f);
+			DrawText(program, textureForText, score, .2f, .000002f, -5.1f, -2.7f);
 		}
 	
 
@@ -617,6 +613,7 @@ int main(int argc, char *argv[])
 	}
 
 	clearTheHeap(theBulletStorage);
+	delete theBulletStorage;
 	//delete program;
 	//#ifdef _WIN32
 	//	std::cin.get();
