@@ -33,12 +33,13 @@ public:
 	float direction_x;
 	float direction_y;
 	bool isAlive;
+	float shiftedDownBy;
 
 
 
 	Entity(float xPos, float yPos, float rotationVal, int textureId, float Width,
-		float Height, float Speed, float Direction_x, float Direction_y, bool moveDown = false) : x(xPos), y(yPos), rotation(rotationVal),
-		textureID(textureId), width(Width), height(Height), speed(Speed), direction_x(Direction_x), direction_y(Direction_y), isAlive(moveDown)
+		float Height, float Speed, float Direction_x, float Direction_y, bool moveDown = false, float shifteddownBy = 0.0f) : x(xPos), y(yPos), rotation(rotationVal),
+		textureID(textureId), width(Width), height(Height), speed(Speed), direction_x(Direction_x), direction_y(Direction_y), isAlive(moveDown), shiftedDownBy(shiftedDownBy)
 	{
 
 	}
@@ -105,11 +106,12 @@ public:
 	float y;
 	float angle;
 	float speed;
-	Bullet* shootBullet();
+	float width;
+	Bullet* shootBullet(float x, float y, float width);
 	bool shouldRemoveBullet();
 	void update(float elapsed);
 	int collide(std::vector<Entity>& theEnemies);
-	Bullet(float X, float Y, float Angle=0, float Speed=0.5f) :x(X), y(Y), angle(Angle), speed(Speed)
+	Bullet(float X, float Y, float Width, float Angle = 0, float Speed = 1.5f) :x(X), y(Y), angle(Angle), speed(Speed), width(Width)
 	{
 		
 	}
@@ -165,12 +167,12 @@ SDL_Window* displayWindow;
 
 
 
-Bullet* shootBullet(float x, float y) {
-	Bullet *newBullet = new Bullet(x, y);
+Bullet* Bullet::shootBullet(float x, float y, float width) {
+	Bullet *newBullet = new Bullet(x, y, width);
 	return newBullet;
 }
 bool Bullet::shouldRemoveBullet() {
-	if (this->y > 0.75f) {
+	if (this->y > 2.4f) {
 		return true;
 	}
 	else {
@@ -181,13 +183,14 @@ int Bullet::collide(std::vector<Entity>& theEnemies)
 {
 	for (int i = 0; i < theEnemies.size(); i++)
 	{
-		if (x < (theEnemies[i].x + theEnemies[i].width) && x >(theEnemies[i].x - theEnemies[i].width))
+		
+
+		if (x + width< (theEnemies[i].x + (theEnemies[i].width/2) && x-width>(theEnemies[i].x - (theEnemies[i].width/2))))
 		{
-			if (y -y/2< (theEnemies[i].y + .00000001f) || y+y/2 > (theEnemies[i].y -.00000001f) )
+			if (y < theEnemies[i].y + (theEnemies[i].height/2) && y > theEnemies[i].y - (theEnemies[i].height/2 ))
 			{
-				std::cout << "HEIGHT OF BULLET   " << y << std::endl;
-				std::cout << "HEIGHT OF enemy" << theEnemies[i].y + theEnemies[i].height << std::endl;
-				std::cout << "HEIGHT OF enemy" << theEnemies[i].y - theEnemies[i].height << std::endl;
+				std::cout << "THE HEIGHT FOR BULLET" << y << std::endl;
+				std::cout << "THE HEIGHT FOR Enemy" << theEnemies[i].y << std::endl;
 				return i;
 			}
 		}
@@ -298,11 +301,10 @@ void update(std::vector<Entity>& theEnemies, float speed, SheetSprite& enemy)
 		program->setModelMatrix(modelMatrix);
 
 		modelMatrix.identity();
-		modelMatrix.Scale(0.25, 0.25, 0);
 		modelMatrix.Translate(theEnemies[i].x, theEnemies[i].y, 0);
 		if (theEnemies[i].direction_x > 0)
 		{
-			if (theEnemies[0].x < 1.5f)
+			if (theEnemies[0].x < 2.4f)
 			{
 				theEnemies[i].moveEntity(3*speed*theEnemies[i].direction_x, 0);
 				theEnemies[i].x += speed*theEnemies[i].direction_x;
@@ -312,13 +314,13 @@ void update(std::vector<Entity>& theEnemies, float speed, SheetSprite& enemy)
 			else 
 			{
 				theEnemies[i].direction_x *= -1;
-				theEnemies[i].y = theEnemies[i].y - theEnemies[i].height;
+				theEnemies[i].y = theEnemies[i].y - 2*theEnemies[i].height;
 				modelMatrix.Translate(0, theEnemies[i].y, 0);
 			}
 		}
 		else if (theEnemies[i].direction_x < 0)
 		{
-			if (theEnemies[theEnemies.size()-1].x > -1.5f)
+			if (theEnemies[theEnemies.size()-1].x > -2.4f)
 			{
 				theEnemies[i].moveEntity(3*speed*theEnemies[i].direction_x, 0);
 				theEnemies[i].x += speed*theEnemies[i].direction_x;
@@ -327,7 +329,8 @@ void update(std::vector<Entity>& theEnemies, float speed, SheetSprite& enemy)
 			else
 			{
 				theEnemies[i].direction_x *= -1;
-				theEnemies[i].y = theEnemies[i].y - theEnemies[i].height;
+				theEnemies[i].y = theEnemies[i].y - 2*theEnemies[i].height;
+
 				
 			}
 		}
@@ -356,12 +359,12 @@ int main(int argc, char *argv[])
 {
 
 	//allows me to print to the console. Only affects windows users.
-	#ifdef _WINDOWS
-		AllocConsole();
-		freopen("CONIN$", "r", stdin);
-		freopen("CONOUT$", "w", stdout);
-		freopen("CONOUT$", "w", stderr);
-	#endif
+	/*#ifdef _windows
+		allocconsole();
+		freopen("conin$", "r", stdin);
+		freopen("conout$", "w", stdout);
+		freopen("conout$", "w", stderr);
+	#endif*/
 
 
 
@@ -376,12 +379,16 @@ int main(int argc, char *argv[])
 
 	glViewport(0, 0, 640, 360);
 	projectionMatrix.setOrthoProjection(-5.33f, 5.33f, -3.0f, 3.0f, -1.0f, 1.0f);
+	projectionMatrixForShip.setOrthoProjection(-5.33f, 5.33f, -3.0f, 3.0f, -1.0f, 1.0f);
+	projectionMatrixForText.setOrthoProjection(-5.33f, 5.33f, -3.0f, 3.0f, -1.0f, 1.0f);
+	projectionMatrixForBullet.setOrthoProjection(-5.33f, 5.33f, -3.0f, 3.0f, -1.0f, 1.0f);
 
 	program = new ShaderProgram(RESOURCE_FOLDER"vertex_textured.glsl", RESOURCE_FOLDER"fragment_textured.glsl");
 	glUseProgram(program->programID);
 
 	SDL_Event event;
 	bool done = false;
+	
 	
 	//starting text
 	std::string startingText = "SPACE INVADERS!";
@@ -392,9 +399,9 @@ int main(int argc, char *argv[])
 
 
 	//the specific textures we need
-	SheetSprite enemyBlack = SheetSprite(theEntireSpriteSheet, (423.0f / 1024.0f), 728.0f / 1024.0f, 93.0f / 1024.0f, 84.0f / 1024.0f, 0.50f);
-	SheetSprite playerShip = SheetSprite(theEntireSpriteSheet, (211.0f / 1024.0f), 941.0f / 1024.0f, 99.0f / 1024.0f, 75.0f / 1024.0f, 0.15f);
-	SheetSprite bullet = SheetSprite(theEntireSpriteSheet, (827.0f / 1024.0f), 125.0f / 1024.0f, 16.0f / 1024.0f, 40.0f / 1024.0f, 0.1f);
+	SheetSprite enemyBlack = SheetSprite(theEntireSpriteSheet, (423.0f / 1024.0f), 728.0f / 1024.0f, 93.0f / 1024.0f, 84.0f / 1024.0f, .5f);
+	SheetSprite playerShip = SheetSprite(theEntireSpriteSheet, (211.0f / 1024.0f), 941.0f / 1024.0f, 99.0f / 1024.0f, 75.0f / 1024.0f, 1.0f);
+	SheetSprite bullet = SheetSprite(theEntireSpriteSheet, (827.0f / 1024.0f), 125.0f / 1024.0f, 16.0f / 1024.0f, 40.0f / 1024.0f, .25f);
 
 
 
@@ -406,16 +413,16 @@ int main(int argc, char *argv[])
 	//=================================================================================================================================================
 	//all the enemies 
 	
-	Entity enemy2 = Entity(-0.60f, 2.4f, 0.0f, theEntireSpriteSheet, enemyBlack.width*.25, enemyBlack.height*.25, 0, 1, 1);
-	Entity enemy3 = Entity(-0.30f, 2.4f, 0.0f, theEntireSpriteSheet, enemyBlack.width*.25, enemyBlack.height*.25, 0, 1, 1);
-	Entity enemy6 = Entity(0.0f, 2.4f, 0.0f, theEntireSpriteSheet, enemyBlack.width*.25, enemyBlack.height*.25, 0, 1, 1);
-	Entity enemy8 = Entity(0.30f, 2.4f, 0.0f, theEntireSpriteSheet, enemyBlack.width*.25, enemyBlack.height*.25, 0, 1, 1);
-	Entity enemy9 = Entity(0.60f, 2.4f, 0.0f, theEntireSpriteSheet, enemyBlack.width*.25, enemyBlack.height*.25, 0, 1, 1);
-	Entity enemy = Entity(-0.60f, 1.3f, 0.0f, theEntireSpriteSheet, enemyBlack.width*.25, enemyBlack.height*.25, 0, 1, 1);
-	Entity enemy4 = Entity(-0.30f, 1.3f, 0.0f, theEntireSpriteSheet, enemyBlack.width*.25, enemyBlack.height*.25, 0, 1, 1);
-	Entity enemy5 = Entity(-0.0f, 1.3f, 0.0f, theEntireSpriteSheet, enemyBlack.width*.25, enemyBlack.height*.25, 0, 1, 1);
-	Entity enemy7 = Entity(0.30f, 1.3f, 0.0f, theEntireSpriteSheet, enemyBlack.width*.25, enemyBlack.height*.25, 0, 1, 1);
-	Entity enemy10 = Entity(0.60f, 1.3f, 0.0f, theEntireSpriteSheet, enemyBlack.width*.25, enemyBlack.height*.25, 0, 1, 1);
+	Entity enemy2 = Entity(-.8f, 2.0f, 0.0f, theEntireSpriteSheet, enemyBlack.width, enemyBlack.height*.25, 0, 1, 1);
+	Entity enemy3 = Entity(-0.4f, 2.0f, 0.0f, theEntireSpriteSheet, enemyBlack.width, enemyBlack.height*.25, 0, 1, 1);
+	Entity enemy6 = Entity(0.0f, 2.0f, 0.0f, theEntireSpriteSheet, enemyBlack.width, enemyBlack.height*.25, 0, 1, 1);
+	Entity enemy8 = Entity(0.4f, 2.0f, 0.0f, theEntireSpriteSheet, enemyBlack.width, enemyBlack.height*.25, 0, 1, 1);
+	Entity enemy9 = Entity(0.8f, 2.0f, 0.0f, theEntireSpriteSheet, enemyBlack.width, enemyBlack.height*.25, 0, 1, 1);
+	Entity enemy = Entity(-.8f, 1.3f, 0.0f, theEntireSpriteSheet, enemyBlack.width, enemyBlack.height*.25, 0, 1, 1);
+	Entity enemy4 = Entity(-0.4f, 1.3f, 0.0f, theEntireSpriteSheet, enemyBlack.width, enemyBlack.height*.25, 0, 1, 1);
+	Entity enemy5 = Entity(0.0f, 1.3f, 0.0f, theEntireSpriteSheet, enemyBlack.width, enemyBlack.height*.25, 0, 1, 1);
+	Entity enemy7 = Entity(0.4f, 1.3f, 0.0f, theEntireSpriteSheet, enemyBlack.width, enemyBlack.height*.25, 0, 1, 1);
+	Entity enemy10 = Entity(0.8f, 1.3f, 0.0f, theEntireSpriteSheet, enemyBlack.width, enemyBlack.height*.25, 0, 1, 1);
 
 	std::cout << enemyBlack.width << std::endl;
 	//===================================================================================================================================================
@@ -451,6 +458,7 @@ int main(int argc, char *argv[])
 		}
 		
 		
+
 		const Uint8 *keys = SDL_GetKeyboardState(NULL);
 		float ticks = (float)SDL_GetTicks() / 1000.0f;
 		float elapsed = ticks - lastFrameTicks;
@@ -474,8 +482,8 @@ int main(int argc, char *argv[])
 
 		if (inMenu == 0)
 		{
-			DrawText(program, textureForText, startingText, .07f, .002f, -.50f, .30f);
-			DrawText(program, textureForText, pressSpace, .07f, .0002f, -.7f, -.75f);
+			DrawText(program, textureForText, startingText, .4f, .002f, -2.67f, .30f);
+			DrawText(program, textureForText, pressSpace, .27f, .0002f, -2.6f, -.75f);
 
 		}
 		if (keys[SDL_SCANCODE_RETURN])
@@ -488,27 +496,27 @@ int main(int argc, char *argv[])
 		program->setViewMatrix(viewMatrixForShip);
 		if (inMenu == 1)
 		{
-			player.setPos(0, -.75f);
-			modelMatrixForShip.setPosition(0, -.75f, 0);
+			player.setPos(0, -2.3f);
+			modelMatrixForShip.setPosition(0, -2.3f, 0);
 			++inMenu;
 			program->setModelMatrix(modelMatrixForBullet);
 			program->setProjectionMatrix(projectionMatrixForBullet);
 			program->setViewMatrix(viewMatrixForBullet);
-			modelMatrix.setPosition(0, -.50f, 0);
+			modelMatrix.setPosition(0, -.5f, 0);
 		}
 	
-		playerShip.Draw(program);
+		
 
 		if (inMenu != 0)
 		{
-			
+			playerShip.Draw(program);
 			update(vecOfEnemy, velocityForEnemies, enemyBlack);
 			update(vecOfEnemy2, velocityForEnemies, enemyBlack);
 			
 			if (keys[SDL_SCANCODE_RIGHT])
 			{
 				
-				if (player.x < .90f && player.direction_x > 0)
+				if (player.x < 4.0f && player.direction_x > 0)
 				{ 
 					
 					player.x += velocityForShip;
@@ -525,7 +533,7 @@ int main(int argc, char *argv[])
 			}
 			else if (keys[SDL_SCANCODE_LEFT])
 			{
-				if (player.x >-.90f && player.direction_x < 0)
+				if (player.x >-4.0f && player.direction_x < 0)
 				{
 					
 
@@ -540,13 +548,12 @@ int main(int argc, char *argv[])
 
 
 			}
-			playerShip.Draw(program);
 
 			if (keys[SDL_SCANCODE_SPACE])
 			{
 				if (theBulletStorage.size() == 0)
 				{
-					Bullet* currBullet = new Bullet(player.x, player.y + 0.1f);
+					Bullet* currBullet = new Bullet(player.x, player.y + 0.1f, bullet.width);
 					theBulletStorage.push_back(currBullet);
 				
 				}
@@ -598,7 +605,7 @@ int main(int argc, char *argv[])
 		if (inMenu != 0)
 		{
 			score = "Score: " + std::to_string((-1 * vecOfEnemy.size()-vecOfEnemy2.size() + 10));
-			DrawText(program, textureForText, score, .05f, .000002f, -.97f, .68f);
+			DrawText(program, textureForText, score, .3f, .000002f, -.97f, .68f);
 		}
 	
 
