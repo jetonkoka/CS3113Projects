@@ -12,6 +12,7 @@
 #include "Matrix.h"
 #include <vector>
 #include <string>
+#include <SDL_mixer.h>
 
 #ifdef _WINDOWS
 #define RESOURCE_FOLDER ""
@@ -185,12 +186,10 @@ int Bullet::collide(std::vector<Entity>& theEnemies)
 	{
 		
 
-		if (x > (theEnemies[i].x + (theEnemies[i].width/2) && x <(theEnemies[i].x - (theEnemies[i].width/2))))
+		if (std::fabs( x - (theEnemies[i].x ) )< .1f)
 		{
-			if (y < theEnemies[i].y + (theEnemies[i].height/2) && y > theEnemies[i].y - (theEnemies[i].height/2 ))
+			if (std::fabs(y - (theEnemies[i].y))< .1f)
 			{
-				std::cout << "THE HEIGHT FOR BULLET" << y << std::endl;
-				std::cout << "THE HEIGHT FOR Enemy" << theEnemies[i].y << std::endl;
 				return i;
 			}
 		}
@@ -339,6 +338,7 @@ void update(std::vector<Entity>& theEnemies, float speed, SheetSprite& enemy, st
 		if (theBulletStorage->size() != 0)
 		{
 
+
 			if ((*theBulletStorage)[0]->shouldRemoveBullet())
 			{
 				delete (*theBulletStorage)[0];
@@ -392,14 +392,16 @@ void clearTheHeap(std::vector<obj*>* vec)
 int main(int argc, char *argv[])
 {
 
-	//allows me to print to the console. Only affects windows users.
+	//allows me to print to the console. only affects windows users.
 	/*#ifdef _windows
 		allocconsole();
 		freopen("conin$", "r", stdin);
 		freopen("conout$", "w", stdout);
 		freopen("conout$", "w", stderr);
-	#endif*/
+	#endif
+*/
 
+	
 
 
 	float lastFrameTicks = 0.0f;
@@ -480,7 +482,14 @@ int main(int argc, char *argv[])
 
 	std::vector<Bullet*> *theBulletStorage = new std::vector<Bullet*>;
 
-
+	//======================================================================================================================================================
+	Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 4096);
+	Mix_Chunk *someSound;
+	someSound = Mix_LoadWAV("sfx.wav");
+	Mix_Music *music;
+	music = Mix_LoadMUS("space_invaders.mp3");
+	Mix_PlayMusic(music, -1);
+	//======================================================================================================================================================
 
 
 	while (!done) {
@@ -492,7 +501,6 @@ int main(int argc, char *argv[])
 		}
 		
 		
-
 		const Uint8 *keys = SDL_GetKeyboardState(NULL);
 		float ticks = (float)SDL_GetTicks() / 1000.0f;
 		float elapsed = ticks - lastFrameTicks;
@@ -585,11 +593,13 @@ int main(int argc, char *argv[])
 
 			if (keys[SDL_SCANCODE_SPACE])
 			{
+
 				if (theBulletStorage->size() == 0)
 				{
 					Bullet* currBullet = new Bullet(player.x, player.y + 0.1f, bullet.width);
 					theBulletStorage->push_back(currBullet);
-				
+					Mix_PlayChannel(-1, someSound, 0);
+
 				}
 			
 			}
@@ -615,11 +625,12 @@ int main(int argc, char *argv[])
 	clearTheHeap(theBulletStorage);
 	delete theBulletStorage;
 	//delete program;
-	//#ifdef _WIN32
-	//	std::cin.get();
-	//#endif
-	//
-
+	/*#ifdef _WIN32
+		std::cin.get();
+	#endif*/
+	
+	Mix_FreeChunk(someSound);
+	Mix_FreeMusic(music);
 
 
 	SDL_Quit();
