@@ -399,9 +399,9 @@ int main(int argc, char *argv[])
 		freopen("conout$", "w", stdout);
 		freopen("conout$", "w", stderr);
 	#endif
-*/
 
-	
+
+	*/
 
 
 	float lastFrameTicks = 0.0f;
@@ -484,12 +484,19 @@ int main(int argc, char *argv[])
 
 	//======================================================================================================================================================
 	Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 4096);
-	Mix_Chunk *someSound;
-	someSound = Mix_LoadWAV("sfx.wav");
+	Mix_Chunk *bulletSound;
+	bulletSound = Mix_LoadWAV("sfx.wav");
 	Mix_Music *music;
 	music = Mix_LoadMUS("space_invaders.mp3");
 	Mix_PlayMusic(music, -1);
 	//======================================================================================================================================================
+
+
+	
+
+
+
+
 
 
 	while (!done) {
@@ -507,6 +514,7 @@ int main(int argc, char *argv[])
 		lastFrameTicks = ticks;
 		float velocityForShip = 2 * elapsed;
 		float velocityForEnemies = 0.05f * elapsed;
+		//bulletSound = Mix_LoadWAV("bullet.wav");
 
 
 
@@ -598,7 +606,7 @@ int main(int argc, char *argv[])
 				{
 					Bullet* currBullet = new Bullet(player.x, player.y + 0.1f, bullet.width);
 					theBulletStorage->push_back(currBullet);
-					Mix_PlayChannel(-1, someSound, 0);
+					Mix_PlayChannel(-1, bulletSound, 0);
 
 				}
 			
@@ -624,12 +632,12 @@ int main(int argc, char *argv[])
 
 	clearTheHeap(theBulletStorage);
 	delete theBulletStorage;
-	//delete program;
+	delete program;
 	/*#ifdef _WIN32
 		std::cin.get();
-	#endif*/
-	
-	Mix_FreeChunk(someSound);
+	#endif
+	*/
+	Mix_FreeChunk(bulletSound);
 	Mix_FreeMusic(music);
 
 
