@@ -112,7 +112,7 @@ public:
 	bool shouldRemoveBullet();
 	void update(float elapsed);
 	int collide(std::vector<Entity>& theEnemies);
-	Bullet(float X, float Y, float Width, float Angle = 0, float Speed = 1.5f) :x(X), y(Y), angle(Angle), speed(Speed), width(Width)
+	Bullet(float X, float Y, float Width, float Angle = 0, float Speed = .4f) :x(X), y(Y), angle(Angle), speed(Speed), width(Width)
 	{
 		
 	}
@@ -186,9 +186,9 @@ int Bullet::collide(std::vector<Entity>& theEnemies)
 	{
 		
 
-		if (std::fabs( x - (theEnemies[i].x ) )< .1f)
+		if (std::fabs( x - (theEnemies[i].x ) )< .15f)
 		{
-			if (std::fabs(y - (theEnemies[i].y))< .1f)
+			if (std::fabs(y - (theEnemies[i].y))< .15f)
 			{
 				return i;
 			}
@@ -393,15 +393,15 @@ int main(int argc, char *argv[])
 {
 
 	//allows me to print to the console. only affects windows users.
-	/*#ifdef _windows
-		allocconsole();
+	#ifdef _WIN32
+		AllocConsole();
 		freopen("conin$", "r", stdin);
 		freopen("conout$", "w", stdout);
 		freopen("conout$", "w", stderr);
 	#endif
 
 
-	*/
+	
 
 
 	float lastFrameTicks = 0.0f;
@@ -460,7 +460,6 @@ int main(int argc, char *argv[])
 	Entity enemy7 = Entity(0.4f, 1.3f, 0.0f, theEntireSpriteSheet, enemyBlack.width, enemyBlack.height*.25, 0, 1, 1);
 	Entity enemy10 = Entity(0.8f, 1.3f, 0.0f, theEntireSpriteSheet, enemyBlack.width, enemyBlack.height*.25, 0, 1, 1);
 
-	std::cout << enemyBlack.width << std::endl;
 	//===================================================================================================================================================
 
 
@@ -481,6 +480,13 @@ int main(int argc, char *argv[])
 	//======================================================================================================================================================
 
 	std::vector<Bullet*> *theBulletStorage = new std::vector<Bullet*>;
+
+
+
+
+
+
+
 
 	//======================================================================================================================================================
 	Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 4096);
@@ -601,11 +607,15 @@ int main(int argc, char *argv[])
 
 			if (keys[SDL_SCANCODE_SPACE])
 			{
+				program->setModelMatrix(modelMatrixForBullet);
+				program->setProjectionMatrix(projectionMatrixForBullet);
 
 				if (theBulletStorage->size() == 0)
 				{
-					Bullet* currBullet = new Bullet(player.x, player.y + 0.1f, bullet.width);
+					Bullet* currBullet = new Bullet(player.x, player.y + .5f, bullet.width);
 					theBulletStorage->push_back(currBullet);
+					modelMatrixForBullet.setPosition(player.x, player.y + .1f, 0);
+					bullet.Draw(program);
 					Mix_PlayChannel(-1, bulletSound, 0);
 
 				}
@@ -633,10 +643,10 @@ int main(int argc, char *argv[])
 	clearTheHeap(theBulletStorage);
 	delete theBulletStorage;
 	delete program;
-	/*#ifdef _WIN32
+	#ifdef _WIN32
 		std::cin.get();
 	#endif
-	*/
+	
 	Mix_FreeChunk(bulletSound);
 	Mix_FreeMusic(music);
 
